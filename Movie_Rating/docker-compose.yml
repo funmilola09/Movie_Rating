@@ -1,0 +1,33 @@
+#version: '27.1.2'
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres_db2
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: movie_ratings
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  
+  airflow:
+    image: puckel/docker-airflow
+    container_name: airflow
+    environment:
+      LOAD_EXAMPLES: 'false'
+      EXECUTOR: 'LocalExecutor'
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    volumes:
+      - ./dags:/usr/local/airflow/dags
+      - ./data:/usr/local/airflow/data
+      - ./requirements.txt:/requirements.txt
+    command: bash -c "pip install -r /requirements.txt && airflow webserver"
+  
+volumes:
+  postgres_data:
